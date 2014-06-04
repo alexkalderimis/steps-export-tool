@@ -1,7 +1,7 @@
 {
-  "name": "show-list-tool",
+  "name": "tool-template-react",
   "version": "0.1.0",
-  "homepage": "https://github.com/alexkalderimis/show-list-tool",
+  "homepage": "https://github.com/alexkalderimis/tool-template-react",
   "authors": [
     "Alex Kalderimis <alexkalderimis@gmail.com>"
   ],

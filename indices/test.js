@@ -7,10 +7,7 @@ var chan = Channel.build({
 chan.call({
   method: 'init',
   params: {
-    listName: 'PL FlyTF_putativeTFs',
-    service: {
-      root: "http://www.flymine.org/query"
-    }
+    place: 'IFrame'
   },
   success: function () {
     console.log("Tool initialised");
@@ -36,11 +33,7 @@ for (i = 0, l = links.length; i < l; i++) {
   });
 }
 
-chan.bind('has-list', function (trans, data) {
-  console.log("Woot - list exists");
-});
-
-chan.bind('wants', function (trans, params) {
-  console.log('WANT', params.what, params.data);
+chan.bind('has', function (trans, message) {
+  alert(message.what + ': ' + message.data);
 });
 
