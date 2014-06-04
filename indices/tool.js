@@ -37,7 +37,7 @@ require.config({
     }
 });
 
-require(['react', 'imjs', './analysis-tools', 'jschannel', 'bootstrap'], function (React, imjs, View, Channel) {
+require(['react', 'imjs', 'main', 'jschannel', 'bootstrap'], function (React, imjs, View, Channel) {
     'use strict';
 
     var chan = Channel.build({
@@ -45,35 +45,17 @@ require(['react', 'imjs', './analysis-tools', 'jschannel', 'bootstrap'], functio
       origin: '*',
       scope: 'CurrentStep'
     });
+    var rootNode = document.body;
 
     chan.bind('init', function (trans, params) {
 
-      var listName = params.listName;
-      var serviceArgs = params.service;
-      var rootNode = document.body;
-      var service = imjs.Service.connect(serviceArgs);
+      var place = params.place;
 
-      service.fetchList(listName).then(function showList (list) {
-        var listView = new View({
-          service: service,
-          list: list,
-          onSelectedItems: reportItems,
-          executeQuery: executeQuery.bind(null, serviceArgs.root),
-          wants: wants
-        });
-        React.renderComponent(listView, rootNode);
-
-        chan.notify({
-          method: 'has-list',
-          params: {
-            root: service.root,
-            name: list.name,
-            type: list.type
-          }
-        });
-
+      var view = new View({
+        place: place,
+        returnGreeting: returnGreeting
       });
-
+      React.renderComponent(view, rootNode);
       return 'ok';
     });
 
@@ -89,39 +71,12 @@ require(['react', 'imjs', './analysis-tools', 'jschannel', 'bootstrap'], functio
 
     });
 
-    function wants (message) {
+    function returnGreeting() {
       chan.notify({
-        method: 'wants',
-        params: message
-      });
-    }
-
-    function executeQuery (root, title, query) {
-      nextStep({
-        title: 'ran ' + title,
-        tool: 'show-table',
-        data: {
-          query: query,
-          service: { root: root }
-        }
-      });
-    }
-
-    function nextStep (data) {
-      chan.notify({
-        method: 'next-step',
-        params: data
-      });
-    }
-
-    function reportItems (path, type, ids) {
-      chan.notify({
-        method: 'has-items',
+        method: 'has',
         params: {
-          key: path,   // String - any identifier.
-          noun: type, // String - eg: "Protein"
-          categories: ['selected'],
-          ids: ids  // Array[Int] - eg: [123, 456, 789]
+          what: 'Greeting',
+          data: 'Yo'
         }
       });
     }

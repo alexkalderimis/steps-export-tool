@@ -1,5 +1,5 @@
 {
-  "name": "show-list-tool",
+  "name": "tool-template-react",
   "version": "0.1.0",
   "description": "A tool to show a results table in intermine-steps",
   "main": "server.js",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/alexkalderimis/show-list-tool.git"
+    "url": "git://github.com/alexkalderimis/tool-template-react.git"
   },
   "keywords": [
     "intermine",
@@ -26,9 +26,9 @@
   "author": "Alex Kalderimis",
   "license": "Apache2",
   "bugs": {
-    "url": "https://github.com/alexkalderimis/show-list-tool/issues"
+    "url": "https://github.com/alexkalderimis/tool-template-react/issues"
   },
-  "homepage": "https://github.com/alexkalderimis/show-list-tool",
+  "homepage": "https://github.com/alexkalderimis/tool-template-react",
   "devDependencies": {
   },
   "dependencies": {
