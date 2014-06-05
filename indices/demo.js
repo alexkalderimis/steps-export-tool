@@ -39,12 +39,14 @@ require.config({
 require(['react', 'imjs', 'main', 'bootstrap'], function (React, imjs, View) {
     'use strict';
 
-    var view = new View({place: 'world', returnGreeting: returnGreeting});
+    var query = {
+      select: ['taxonId', 'genus', 'species'],
+      from: 'Organism'
+    };
+
+    var mine  = imjs.Service.connect({root: "http://www.flymine.org/query/service"});
+    var view  = View({query: query, mine: mine});
 
     React.renderComponent(view, document.body);
-
-    function returnGreeting() {
-      alert("Greetings to you good sir/madam!");
-    }
 
 });

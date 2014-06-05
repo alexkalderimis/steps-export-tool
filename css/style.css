@@ -2,3 +2,11 @@ a,
 .pointer {
     cursor: pointer;
 }
+
+.tab-content {
+    padding: 1em;
+}
+
+.draggable {
+    cursor: move;
+}
