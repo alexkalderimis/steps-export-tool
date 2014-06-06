@@ -1,4 +1,8 @@
-define(['react', 'table-header'], function (React, TableHeader) {
+define([
+    'react',
+    'formats',
+    'table-header'
+    ], function (React, formats, TableHeader) {
 
   'use strict';
 
@@ -9,17 +13,13 @@ define(['react', 'table-header'], function (React, TableHeader) {
   var controlCols = 'col-sm-8';
   var previewSize = 3;
 
-  var formats = [
-    {name: 'tab', key: 'tab', ext: 'tsv'},
-    {name: 'comma', key: 'csv', ext: 'csv'}
-  ];
-
   return React.createClass({
 
     displayName: 'SpreadSheetOptions',
 
     getInitialState: function () {
       return {
+        currentQuery: null,
         columnIsDisabled: {},
         firstFewRows: [],
         lastRow: [],
@@ -35,8 +35,17 @@ define(['react', 'table-header'], function (React, TableHeader) {
       this.computeState(props);
     },
 
+    queryIsNew: function (query) {
+      var thisQuery = JSON.stringify(query);
+      var isDifferent = thisQuery !== this.state.currentQuery;
+      this.setState({currentQuery: thisQuery});
+      return isDifferent;
+    },
+
     computeState: function (props) {
       var that = this;
+      if (!this.queryIsNew(props.query)) return;
+
       props.mine.rows(props.query, {size: previewSize}).then(function (rows) {
         var state = that.state;
         state.firstFewRows = rows;
@@ -57,7 +66,7 @@ define(['react', 'table-header'], function (React, TableHeader) {
       var s = this.state;
 
       var preview = d.table(
-          {className: 'table'},
+          {className: 'table preview-table'},
           d.thead({}, d.tr({}, this.renderTableHeaders())),
           d.tbody({},
             this.getFirstFewRows(),
@@ -96,14 +105,14 @@ define(['react', 'table-header'], function (React, TableHeader) {
       return d.button(
         {
           key: format.key,
-          className: (btn + ((format.ext === p.format) ? ' active' : '')),
-          onClick: this.setFormat.bind(this, format.ext)
+          className: (btn + ((format === p.format) ? ' active' : '')),
+          onClick: this.setFormat.bind(this, format)
         },
         format.name);
     },
 
-    setFormat: function (key) {
-      this.props.onChangeFormat(key);
+    setFormat: function (fmt) {
+      this.props.onChangeFormat(fmt);
     },
 
     renderTableHeaders: function () {
