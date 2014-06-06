@@ -73,10 +73,12 @@ define([
             this.renderExampleRow(),
             this.renderLastRow()));
 
+      var colCount = this.props.query.select.filter(function (_, i) { return !s.columnIsDisabled[i]; }).length;
+
       return d.form(
           {className: 'form-horizontal', onSubmit: preventDefault},
           d.div({className: 'row'},
-            d.div({className: 'col-sm-9'},
+            d.div({className: 'col-sm-6'},
               d.div(
                 {className: 'form-group'},
                 d.label({className: labelCols + ' control-label'}, 'Separator'),
@@ -95,8 +97,14 @@ define([
                     },
                     (s.columnHeaders ? 'on' : 'off'))))),
             d.div(
-              {className: 'col-sm-3'},
-              d.h1({}, s.rowCount, ' rows'))),
+              {className: 'col-sm-6'},
+              d.h1({},
+                colCount,
+                ' column',
+                (colCount === 1 ? '' : 's'),
+                ' x ',
+                s.rowCount,
+                ' rows'))),
             d.div({className: 'form-group'}, preview));
     },
 
