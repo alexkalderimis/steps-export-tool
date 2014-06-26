@@ -25,11 +25,15 @@ define(['react', 'draggable'], function (React, Draggable) {
           onChange: this.toggleDisabled,
           checked: !this.props.disabled
         }),
-        ' ',
         d.button({
           className: 'btn btn-sm',
           onClick: this.changePostion.bind(this, -1)
         }, d.i({className: 'fa fa-angle-left'})),
+        d.button({
+          className: 'btn btn-sm',
+          onClick: this.changePostion.bind(this, +1)
+        }, d.i({className: 'fa fa-angle-right'})),
+        ' ',
         d.span({
           className: 'text-muted',
           style: {
@@ -50,11 +54,7 @@ define(['react', 'draggable'], function (React, Draggable) {
               className: (this.props.disabled || !this.props.columnHeaders)
                           ? 'text-muted' : null},
             this.renderPathName())
-        ),
-        d.button({
-          className: 'btn btn-sm',
-          onClick: this.changePostion.bind(this, +1)
-        }, d.i({className: 'fa fa-angle-right'}))
+        )
         );
     },
 
