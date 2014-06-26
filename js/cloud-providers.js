@@ -10,13 +10,17 @@ define([], function () {
     {
       name: 'Genomespace',
       icon: 'icon icon-genomespace',
-      url: 'http://genomespace',
       description: 'A platform for cloud-based bioinformatics, supported by the Broad Institue'
     },
     {
       name: 'Google Drive',
       icon: 'icon icon-google-drive',
       description: 'An online file storage service.'
+    },
+    {
+      name: 'Dropbox',
+      icon: 'fa fa-dropbox',
+      description: 'An online file storage service'
     }
   ];
 

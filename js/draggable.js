@@ -1,4 +1,4 @@
-define(['react', 'jquery'], function (React, $) {
+define(['react', 'jquery', 'underscore'], function (React, $, _) {
 
   'use strict';
 
@@ -12,6 +12,7 @@ define(['react', 'jquery'], function (React, $) {
       // allow the initial position to be passed in as a prop
       return {
         onDragEnd: function () {},
+        onDragMove: null, // Only called once, and null guarded then.
         onDragStart: function () {},
         draggableBy: {x: true, y: true},
         initialPos: {x: 0, y: 0}
@@ -65,6 +66,16 @@ define(['react', 'jquery'], function (React, $) {
       e.preventDefault();
     },
 
+    /**
+     * notify listeners of the current position.
+     * This method is throttled to avoid calling the blocking
+     * method 'getBoundingClientRect' with unnecessary frequency.
+     */
+    notifyMove: _.throttle(function () {
+      if (!this.props.onDragMove) return;
+      this.props.onDragMove(this.getDOMNode().getBoundingClientRect());
+    }, 100),
+
     onMouseMove: function (e) {
       if (!this.state.dragging) return;
       var newPos = {};
@@ -75,6 +86,7 @@ define(['react', 'jquery'], function (React, $) {
         newPos.y = e.pageY - this.state.dragStart.y;
       }
       this.setState({pos: newPos});
+      this.notifyMove();
       e.stopPropagation();
       e.preventDefault();
     },
@@ -84,7 +96,7 @@ define(['react', 'jquery'], function (React, $) {
       // component to also be on the child DIV.
       return this.transferPropsTo(d.div({
         onMouseDown: this.onMouseDown,
-        className: 'draggable',
+        className: 'draggable' + (this.state.dragging ? ' dragging' : ''),
         style: {
           position: 'relative',
           left: this.state.pos.x + 'px',

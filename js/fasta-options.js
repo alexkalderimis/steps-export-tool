@@ -9,7 +9,7 @@ define(function(require, exports, module) {
   var mixins = require('mixins');
   var Path = require('path');
   var NodeCount = require('node-count');
-  var Gff3Preview = require('gff3-preview');
+  var FastaPreview = require('fasta-preview');
 
   var d = React.DOM;
   var syncro = 0;
@@ -19,7 +19,7 @@ define(function(require, exports, module) {
   var controlCols = 'col-sm-8';
 
   module.exports = React.createClass({
-    displayName: 'Gff3Options',
+    displayName: 'FastaOptions',
 
     mixins: [mixins.ComputableState],
 
@@ -43,43 +43,33 @@ define(function(require, exports, module) {
            .query(props.query)
            .then(function (query) {
         if (ticketNo !== syncro) return;
-        var columns = query.getViewNodes().map(Column).filter(isaSeqFeat);
-        
-        that.setState({exportableNodes: columns});
-        that.props.onChangeFormatOption('export', columns.filter(to('selected'))
-                                                   .map(to('path')));
-
+        var columns = query.getViewNodes().map(function (p, i) {
+          return {path: p, index: i, selected: i === 0};
+        });
+        that.setState({
+          exportableNodes: columns.filter(function (c) { // Diff here.
+            return c.path.isa('SequenceFeature') || c.path.isa('Protein');
+          })
+        });
       }).then(null, console.error.bind(console));
-
-      function Column (p, i) {
-          return {path: p, index: i, selected: true};
-      }
-
-      function isaSeqFeat (c) {
-        return c.path.isa('SequenceFeature');
-      }
     },
 
     renderExportableNode: function (node) {
       var that = this;
-      var button = d.button(
-        {
-          key: String(node.path),
-          onClick: clickHandler,
-          className: 'btn btn-default' + (node.selected ? ' active' : '')
-        },
-        Path(node)
-      );
-      return button;
-
-      function clickHandler (evt) {
-        node.selected = !node.selected;
-        that.setState(that.state);
-        that.props.onChangeFormatOption(
-          'export',
-          that.state.exportableNodes.filter(to('selected')).map(to('path'))
-        );
-      }
+      return d.button(
+          {
+            key: node.path.toString(),
+            onClick: function () {
+              var state = that.state; // Diff here.
+              state.exportableNodes.forEach(function (n) {
+                n.selected = false;
+              });
+              node.selected = !node.selected;
+              that.setState(state);
+            },
+            className: 'btn btn-default' + (node.selected ? ' active' : '')
+          },
+          Path(node));
     },
 
     render: function () {
@@ -100,16 +90,16 @@ define(function(require, exports, module) {
               mine: this.props.mine,
               query: this.props.query,
               nodes: exportableNodes.filter(to('selected')).map(to('path')),
-              what: Path({mine: this.props.mine, path: 'SequenceFeature'})
+              what: 'Sequence' // Diff here
             })),
           preview);
     },
 
     renderPreview: function () {
-      return Gff3Preview({
+      return FastaPreview({ // Diff here.
         mine: this.props.mine,
         query: this.props.query,
-        nodes: (this.props.formatOptions.export || [])
+        nodes: this.state.exportableNodes.filter(to('selected')).map(to('path'))
       });
     }
   });

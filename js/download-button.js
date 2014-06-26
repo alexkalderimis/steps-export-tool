@@ -1,4 +1,4 @@
-define(['react'], function (React) {
+define(['react', 'mixins'], function (React, mixins) {
   'use strict';
 
   var d = React.DOM;
@@ -10,18 +10,12 @@ define(['react'], function (React) {
       return {};
     },
 
-    componentWillMount: function () {
-      this.computeState(this.props);
-    },
-
-    componentWillReceiveProps: function (props) {
-      this.computeState(props);
-    },
+    mixins: [mixins.ComputableState],
 
     computeState: function (props) {
       var that = this;
-      props.mine.query(props.query).then(function (q) {
-        that.setState({exportURI: q.getExportURI(props.format)});
+      props.uriPromise.then(function (uri) {
+        that.setState({exportURI: uri});
       });
     },
 
@@ -33,7 +27,7 @@ define(['react'], function (React) {
         },
         d.i({className: 'fa fa-cloud-download'}),
         ' download ',
-        this.props.fileName);
+        d.strong({}, this.props.fileName));
     }
   });
 

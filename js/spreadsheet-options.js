@@ -1,8 +1,9 @@
 define([
     'react',
     'formats',
-    'table-header'
-    ], function (React, formats, TableHeader) {
+    'table-header',
+    'grid-options'
+    ], function (React, formats, TableHeader, GridOptions) {
 
   'use strict';
 
@@ -17,54 +18,9 @@ define([
 
     displayName: 'SpreadSheetOptions',
 
-    getInitialState: function () {
-      return {
-        currentQuery: null,
-        columnIsDisabled: {},
-        firstFewRows: [],
-        lastRow: [],
-        columnHeaders: true
-      };
-    },
+    mixins: [GridOptions],
 
-    componentWillMount: function () {
-      this.computeState(this.props);
-    },
-
-    componentWillReceiveProps: function (props) {
-      this.computeState(props);
-    },
-
-    queryIsNew: function (query) {
-      var thisQuery = JSON.stringify(query);
-      var isDifferent = thisQuery !== this.state.currentQuery;
-      this.setState({currentQuery: thisQuery});
-      return isDifferent;
-    },
-
-    computeState: function (props) {
-      var that = this;
-      if (!this.queryIsNew(props.query)) return;
-
-      props.mine.rows(props.query, {size: previewSize}).then(function (rows) {
-        var state = that.state;
-        state.firstFewRows = rows;
-        that.setState(state);
-      });
-      props.mine.count(props.query).then(function (c) {
-        var state = that.state;
-        props.mine.rows(props.query, {size: 1, start: c - 1})
-                  .then(function (rows) {
-          state.lastRow = rows[0];
-          state.rowCount = c;
-          that.setState(state);
-        });
-      });
-    },
-
-    render: function () {
-      var s = this.state;
-
+    renderPreview: function () {
       var preview = d.table(
           {className: 'table preview-table'},
           d.thead({}, d.tr({}, this.renderTableHeaders())),
@@ -73,39 +29,47 @@ define([
             this.renderExampleRow(),
             this.renderLastRow()));
 
-      var colCount = this.props.query.select.filter(function (_, i) { return !s.columnIsDisabled[i]; }).length;
+      return preview;
+    },
 
-      return d.form(
-          {className: 'form-horizontal', onSubmit: preventDefault},
-          d.div({className: 'row'},
-            d.div({className: 'col-sm-6'},
-              d.div(
-                {className: 'form-group'},
-                d.label({className: labelCols + ' control-label'}, 'Separator'),
-                d.div(
-                  {className: 'btn-group ' + controlCols},
-                  formats.map(this.renderFormatSelector))),
-              d.div(
-                {className: 'form-group'},
-                d.label({className: labelCols + ' control-label'}, 'Column Headers'),
-                d.div(
-                  {className: 'btn-group ' + controlCols},
-                  d.button(
-                    {
-                      onClick: this.toggleColumnHeaders,
-                  className: btn + (s.columnHeaders ? ' active' : '')
-                    },
-                    (s.columnHeaders ? 'on' : 'off'))))),
+    getPreview: function (props) {
+      var that = this;
+
+      props.mine.rows(props.query, {size: previewSize}).then(function (rows) {
+        var state = that.state;
+        state.firstFewRows = rows;
+        that.setState(state);
+      });
+    },
+
+    onSetCount: function (c) {
+      var that = this, state = this.state;
+      this.props.mine.rows(this.props.query, {size: 1, start: c - 1})
+                .then(function (rows) {
+        that.setState({lastRow: rows[0]});
+      });
+    },
+
+    customControls: function () {
+      var s = this.state;
+      return [
+        d.div(
+          {className: 'form-group', key: 'sep'},
+          d.label({className: this.labelCols + ' control-label'}, 'Separator'),
+          d.div(
+            {className: 'btn-group ' + this.controlCols},
+            formats.slice(0, 2).map(this.renderFormatSelector))),
+        d.div(
+            {className: 'form-group', key: 'headers'},
+            d.label({className: labelCols + ' control-label'}, 'Column Headers'),
             d.div(
-              {className: 'col-sm-6'},
-              d.h1({},
-                colCount,
-                ' column',
-                (colCount === 1 ? '' : 's'),
-                ' x ',
-                s.rowCount,
-                ' rows'))),
-            d.div({className: 'form-group'}, preview));
+              {className: 'btn-group ' + controlCols},
+              d.button(
+                {
+                  onClick: this.toggleColumnHeaders,
+                  className: btn + (this.props.formatOptions.columnHeaders ? ' active' : '')
+                },
+                (this.props.formatOptions.columnHeaders ? 'on' : 'off'))))];
     },
 
     renderFormatSelector: function (format, i) {
@@ -145,7 +109,7 @@ define([
             state.columnIsDisabled[i] = isDisabled;
             that.setState(state);
           },
-          columnHeaders: state.columnHeaders,
+          columnHeaders: that.props.formatOptions.columnHeaders,
           disabled: state.columnIsDisabled[i],
           pathPromise: pathPromise,
           key: view
@@ -194,15 +158,6 @@ define([
 
     },
 
-    moveColumn: function (oldIdx, newIdx) {
-      var query = this.props.query;
-      var view = query.select.slice();
-      var movendum = view[oldIdx];
-      view.splice(oldIdx, 1);
-      view.splice(newIdx, 0, movendum);
-      this.props.onChangeView(view);
-    },
-
     getFirstFewRows: function () {
       var s = this.state;
       var view = this.props.query.select;
@@ -249,17 +204,9 @@ define([
     },
 
     toggleColumnHeaders: function () {
-      var state = this.state;
-      state.columnHeaders = !state.columnHeaders;
-      this.setState(state);
+      this.props.onChangeFormatOption('columnHeaders', !this.props.formatOptions.columnHeaders);
     }
   });
-
-  function preventDefault (event) {
-    event.preventDefault();
-    return null;
-  }
-
 
 });
 

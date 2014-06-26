@@ -5,22 +5,27 @@ define(function (require, exports, module) {
     , _ = require('underscore')
     , SpreadSheetOptions = require('spreadsheet-options')
     , Gff3Options = require('gff3-options')
+    , FastaOptions = require('fasta-options')
+    , XMLOptions = require('xml-options')
+    , JSONOptions = require('json-options')
     , DownloadButton = require('download-button')
     , cloudProviders = require('cloud-providers')
-    , formats = require('formats');
+    , formats = require('formats')
+    , Dropbox = require('dropbox');
   require('async!https://apis.google.com/js/client.js?!onload');
 
   var d = React.DOM;
   
   var tabs = [
-    {name: 'Spreadsheet'},
-    {name: 'GFF3'},
-    {name: 'FASTA'},
-    {name: 'XML'},
-    {name: 'JSON'}
+    {name: 'Spreadsheet', format: 0},
+    {name: 'GFF3', format: 2},
+    {name: 'FASTA', format: 3},
+    {name: 'XML', format: 4},
+    {name: 'JSON', format: 5}
   ];
 
   module.exports = React.createClass({
+
     displayName: 'Main',
 
     getInitialState: function () {
@@ -33,9 +38,12 @@ define(function (require, exports, module) {
       };
     },
 
+    getFileBaseName: function () {
+      return this.state.fileName || this.props.query.name || 'results';
+    },
+
     getFileName: function () {
-      var name = this.props.query.name || 'results';
-      return name + "." + this.state.format.ext;
+      return this.getFileBaseName() + "." + this.state.format.ext;
     },
 
     render: function () {
@@ -50,10 +58,8 @@ define(function (require, exports, module) {
           }, this.renderCloudOptions()),
           d.div({}, // Wrap to prevent matching .tab-content > .active
             DownloadButton({
-              mine: this.props.mine,
-              query: this.getQuery(),
-              fileName: this.getFileName(),
-              format: this.state.format.key
+              uriPromise: this.getExportURI(),
+              fileName: this.getFileName()
             }),
          ' ',
           d.button(
@@ -114,9 +120,15 @@ define(function (require, exports, module) {
           d.div({className: 'clearfix'}));
     },
 
+    setFileBaseName: function (evt) {
+      this.setState({fileName: this.refs.fileName.getDOMNode().value});
+    },
+
     renderCloudProviderOptions: function () {
       var cloud = (this.state.cloud || {});
       var controls = [];
+      var that = this;
+      var percentDone = this.state.doneness * 100;
       if (cloud.url) {
         controls.push(d.div(
             {key: 'uri', className: 'form-group'},
@@ -127,9 +139,12 @@ define(function (require, exports, module) {
               {className: 'col-sm-9'},
               d.input({
                 type: 'text',
+                ref: 'cloudUrl',
                 className: 'form-control',
-                value: cloud.url,
+                value: (cloud.customUrl || cloud.url),
                 onChange: function (e) {
+                  cloud.customUrl = that.refs.cloudUrl.getDOMNode().value;
+                  that.setState({cloud: cloud});
                 }
               }))));
       }
@@ -146,6 +161,20 @@ define(function (require, exports, module) {
               " Send to ", cloud.name),
             d.p({className: 'pull-left'},
               cloud.description,
+              d.div(
+                {className: 'row'},
+                d.div(
+                  {
+                    className: 'progress',
+                    style: {display: (this.state.doneness == null ? 'none' : 'block')}
+                  },
+                  d.div(
+                    {
+                      className: 'progress-bar',
+                      role: 'progressbar',
+                      style: {'min-width': '10em', width: percentDone + '%'}
+                    },
+                    d.span({}, percentDone.toFixed(), '% complete')))),
               d.a({
                 href: cloud.uploadedFileUri,
                 style: {display: cloud.uploadedFileUri ? 'block' : 'none'}
@@ -156,21 +185,66 @@ define(function (require, exports, module) {
               {className: 'form-group'},
               d.label(
                 {className: 'col-sm-3 control-label'},
-                "file name"),
+                "File Name"),
               d.div(
                 {className: 'col-sm-9'},
-                d.input({
-                  type: 'text',
-                  className: 'form-control',
-                  value: this.getFileName(),
-                  onChange: function (e) {
-                  }}))),
+                d.div(
+                  {className: 'input-group'},
+                  d.input({
+                    type: 'text',
+                    ref: 'fileName',
+                    className: 'form-control',
+                    value: this.getFileBaseName(),
+                    onChange: this.setFileBaseName
+                  }),
+                  d.span(
+                    {className: 'input-group-addon'},
+                    '.',
+                    this.state.format.ext)))),
             controls));
+    },
+
+    onUploadProgress: function (doneness) {
+      this.setState({doneness: doneness});
+    },
+
+    onUploadComplete: function () {
+      this.setState({doneness: null, cloud: null});
+    },
+
+    onUploadError: function () {
+      this.setState({doneness: null});
+    },
+
+    /** @returns Promise<string> **/
+    getExportURI: function () {
+      var format = this.state.format.key;
+      var extraOptions = (this.state[format] || {});
+      console.log(format, extraOptions.export);
+      return this.props.mine.query(this.props.query).then(function (q) {
+        return q.getExportURI(format, extraOptions);
+      });
+    },
+
+    sendToDropbox: function () {
+      var that = this;
+      var fileName = this.getFileName();
+      Dropbox.appKey = this.props.dropboxKey;
+      this.getExportURI().then(function (uri) {
+        Dropbox.save({
+          files: [ {url: uri, filename: fileName} ],
+          success: that.onUploadComplete,
+          progress: that.onUploadProgress,
+          cancel: that.onUploadError,
+          error: that.onUploadError
+        });
+      }).then(
+        this.onUploadProgress.bind(this, 0),
+        console.error.bind(console));
     },
 
     sendToGoogleDrive: function () {
       var that = this;
-      console.log(gapi);
       gapi.auth.authorize({
         client_id: this.props.driveClientId,
         scope: 'https://www.googleapis.com/auth/drive.files',
@@ -231,8 +305,11 @@ define(function (require, exports, module) {
     },
 
     sendToCloud: function (e) {
-      if (this.state.cloud && this.state.cloud === cloudProviders[2]) {
+      var cloud = this.state.cloud;
+      if (cloud === cloudProviders[2]) {
         this.sendToGoogleDrive();
+      } else if (cloud === cloudProviders[3]) {
+        this.sendToDropbox();
       }
       e.preventDefault();
     },
@@ -245,9 +322,22 @@ define(function (require, exports, module) {
       this.setState({format: format});
     },
 
+    onChangeFormatOption: function (option, value) {
+      var state = this.state;
+      var format = state.format.key;
+      var extraOptions = (state[format] || {});
+      extraOptions[option] = value;
+      state[format] = extraOptions;
+      this.setState(state);
+    },
+
     renderActiveTab: function () {
       var that = this;
+      var format = this.state.format;
+      var extraOptions = (this.state[format.key] || {});
       var options = {
+        formatOptions: extraOptions,
+        onChangeFormatOption: this.onChangeFormatOption,
         format: this.state.format,
         onChangeFormat: this.onChangeFormat,
         mine: this.props.mine,
@@ -259,6 +349,12 @@ define(function (require, exports, module) {
           return SpreadSheetOptions(options);
         case 1:
           return Gff3Options(options);
+        case 2:
+          return FastaOptions(options);
+        case 3:
+          return XMLOptions(options);
+        case 4:
+          return JSONOptions(options);
         default:
           return d.div({className: 'alert alert-danger'},
               "Unknown active tab index: ", this.state.activeTab);
@@ -268,6 +364,10 @@ define(function (require, exports, module) {
     activateTab: function (i) {
       var state = this.state;
       state.activeTab = i;
+      if (tabs[i].format != null) {
+        state.format = formats[tabs[i].format];
+      }
+
       this.setState(state);
     }
 

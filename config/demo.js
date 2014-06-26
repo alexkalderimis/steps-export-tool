@@ -1,19 +1,24 @@
 define([], function () {
   'use strict';
 
-  // Drive client ids are bound to defined origins. Make sure you use the right
+  // Drive client ids are bound to defined origins. Make sure we use the right
   // client for the right origin.
   var driveClients = {};
-  driveClients[-1160247359] =
+  driveClients[3213448] =
     "325597969559-0h7jf8u9bsnb96q2uji5ee1r74vrngsu.apps.googleusercontent.com";
 
-  var origin = 0;
+  var dropboxClients = {};
+  dropboxClients[3213448] = "gqr6vpcnp8rmhe5";
+
+  var domain, key = 0;
   if (typeof window !== 'undefined') {
-    origin = hashString(window.location.origin);
+    domain = window.location.origin.split(':')[0];
+    key = hashString(domain);
   }
 
   return {
-    driveClientId: driveClients[origin]
+    driveClientId: driveClients[key],
+    dropboxClientKey: dropboxClients[key]
   };
 
   // Simple one way hash function so we don't have to expose
