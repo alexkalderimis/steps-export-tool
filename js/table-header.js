@@ -19,20 +19,27 @@ define(['react', 'draggable'], function (React, Draggable) {
     },
 
     render: function () {
+      var moveBtnClasses = 'btn btn-xs btn-default';
       return d.th({},
         d.input({
           type: 'checkbox',
           onChange: this.toggleDisabled,
           checked: !this.props.disabled
         }),
-        d.button({
-          className: 'btn btn-sm',
-          onClick: this.changePostion.bind(this, -1)
-        }, d.i({className: 'fa fa-angle-left'})),
-        d.button({
-          className: 'btn btn-sm',
-          onClick: this.changePostion.bind(this, +1)
-        }, d.i({className: 'fa fa-angle-right'})),
+        d.div(
+          {className: 'pull-right btn-group'},
+          d.button({
+            className: moveBtnClasses,
+            title: 'Move column left',
+            disabled: this.props.isFirst,
+            onClick: this.changePostion.bind(this, -1)
+          }, d.i({className: 'fa fa-angle-left'})),
+          d.button({
+            className: moveBtnClasses,
+            title: 'Move column right',
+            disabled: this.props.isLast,
+            onClick: this.changePostion.bind(this, +1)
+          }, d.i({className: 'fa fa-angle-right'}))),
         ' ',
         d.span({
           className: 'text-muted',

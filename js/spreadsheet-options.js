@@ -91,6 +91,7 @@ define([
       var props = this.props;
       var state = this.state;
       var that = this;
+      var lastIndex = props.query.select.length - 1;
       return props.query.select.map(function (view, i) {
         var pathPromise = props.mine.query(props.query).then(function (q) {
           return q.makePath(view);
@@ -98,6 +99,8 @@ define([
         return TableHeader({
           ref: 'header' + i,
           onDragEnd: that.reorderHeader.bind(that, i),
+          isFirst: i === 0,
+          isLast: i === lastIndex,
           changePostion: function (delta) {
             var newIdx = i + delta;
             if (newIdx >= 0 && newIdx < props.query.select.length) {
