@@ -4,6 +4,7 @@ define(function (require, exports, module) {
 
   var React = require('react');
   var Q = require('q');
+  var _ = require('underscore');
 
   var mixins = require('mixins');
 
@@ -78,7 +79,29 @@ define(function (require, exports, module) {
       , xml = query.toXML()
       , k = query.service.root + xml + paths.join(';');
     if (!paths || !paths.length) return Q.when([]);
-    return c[k] || (c[k] = query.getGFF3({size: 4, 'export': paths}).then(parseGff3))
+    return c[k] || (c[k] = performGffRequest(query, paths).then(parseGff3));
+  }
+
+  /**
+   * Actually request GFF3, but only for a subset of the actual items.
+   */
+  function performGffRequest (query, paths) {
+    var clone = query.clone();
+    clone.select(paths);
+    // The gff3 service does not support paging, so to get a sample
+    // for this request we will construct a new query constrained
+    // to the ids returned in the first 4 rows of this request.
+    return clone.rows({size: 4}).then(function (rows) {
+      var substituteQ = {
+        select: ['SequenceFeature.id'],
+        where:  [
+          {path: 'SequenceFeature', op: 'IN', ids: _.flatten(rows)}
+        ]
+      };
+      return query.service.query(substituteQ).then(function (subs) {
+        return subs.getGFF3();
+      });
+    });
   }
 
 });
