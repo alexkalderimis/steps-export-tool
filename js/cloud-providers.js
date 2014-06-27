@@ -3,8 +3,9 @@ define([], function () {
   var cloudProviders = [
     {
       name: 'Galaxy',
+      tool: 'data_source',
       icon: 'icon icon-galaxy',
-      url: 'http://usegalaxy.org',
+      url: 'http://localhost:8181',
       description: 'A widely deployed system for genomics analysis tools.'
     },
     {

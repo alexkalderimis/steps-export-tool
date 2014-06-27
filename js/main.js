@@ -243,6 +243,25 @@ define(function (require, exports, module) {
         console.error.bind(console));
     },
 
+    sendToGalaxy: function () {
+      var that = this;
+      var cloud = this.state.cloud;
+      var galaxy = cloud.url;
+      var tool = cloud.tool;
+      var dataType = this.state.format.ext;
+      var location = galaxy + '/tool_runner';
+      var params = {
+        tool_id: tool,
+        URL_method: 'post',
+        data_type: dataType,
+        info: 'uploaded from intermine'
+      };
+      this.getExportURI().then(function (target) {
+        params.URL = target;
+        openWindowWithPost(location, 'ExportToGalaxy', params);
+      });
+    },
+
     sendToGenomespace: function () {
       var that = this;
       var cloud = this.state.cloud;
@@ -332,6 +351,8 @@ define(function (require, exports, module) {
 
       if (cloud === cloudProviders[2]) {
         this.sendToGoogleDrive();
+      } else if (cloud === cloudProviders[0]) {
+        this.sendToGalaxy();
       } else if (cloud === cloudProviders[1]) {
         this.sendToGenomespace();
       } else if (cloud === cloudProviders[3]) {
@@ -398,4 +419,27 @@ define(function (require, exports, module) {
     }
 
   });
+
+
+  function openWindowWithPost (uri, name, params) {
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.style.display = 'none';
+    form.action = uri;
+    form.target = name + new Date().getTime();
+    var key;
+    for (key in params) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = params[key];
+      form.appendChild(input);
+    }
+    var body = document.querySelector('body');
+    body.appendChild(form);
+    var w = window.open('somenonexistantpathtonowhere', name);
+    form.submit();
+    body.removeChild(form);
+    w.close();
+  }
 });
