@@ -9,6 +9,7 @@ define([], function () {
     },
     {
       name: 'Genomespace',
+      gsurl: "https://gsui.genomespace.org/jsui/upload/loadUrlToGenomespace.html",
       icon: 'icon icon-genomespace',
       description: 'A platform for cloud-based bioinformatics, supported by the Broad Institue'
     },

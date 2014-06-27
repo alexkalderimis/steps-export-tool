@@ -243,6 +243,29 @@ define(function (require, exports, module) {
         console.error.bind(console));
     },
 
+    sendToGenomespace: function () {
+      var that = this;
+      var cloud = this.state.cloud;
+      var genomeSpaceUrl = cloud.gsurl;
+      if (!genomeSpaceUrl) throw new Error("No genomespace URL configured.");
+      if (typeof window === 'undefined') throw new Error("window object not available.");
+      var encFileName = encodeURIComponent(this.getFileName());
+      this.getExportURI().then(encodeURIComponent).then(function (target) {
+        var qs = 'uploadUrl=' + target + '&fileName=' + encFileName;
+        var win = window.open(genomeSpaceUrl + '?' + qs);
+        win.setCallbackOnGSUploadComplete = onSuccess;
+        win.setCallbackOnGSUploadError = onError;
+      });
+      function onSuccess (savePath) {
+        console.log("Saved successfully to " + savePath);
+        cloud.uploadedFileUri = savePath;
+        that.setState({cloud: cloud});
+      }
+      function onError (savePath) {
+        console.error("Error saving to " + savePath);
+      }
+    },
+
     sendToGoogleDrive: function () {
       var that = this;
       gapi.auth.authorize({
@@ -306,8 +329,11 @@ define(function (require, exports, module) {
 
     sendToCloud: function (e) {
       var cloud = this.state.cloud;
+
       if (cloud === cloudProviders[2]) {
         this.sendToGoogleDrive();
+      } else if (cloud === cloudProviders[1]) {
+        this.sendToGenomespace();
       } else if (cloud === cloudProviders[3]) {
         this.sendToDropbox();
       }
