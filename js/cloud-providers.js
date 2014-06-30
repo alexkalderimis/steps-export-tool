@@ -3,6 +3,7 @@ define([], function () {
   var cloudProviders = [
     {
       name: 'Galaxy',
+      // tool: 'ucsc_table_direct1', this tool works, but is the wrong one...
       tool: 'data_source',
       icon: 'icon icon-galaxy',
       url: 'http://localhost:8181',
