@@ -67,9 +67,9 @@ define([
               d.button(
                 {
                   onClick: this.toggleColumnHeaders,
-                  className: btn + (this.props.formatOptions.columnHeaders ? ' active' : '')
+                  className: btn + (this.props.formatOptions.columnheaders ? ' active' : '')
                 },
-                (this.props.formatOptions.columnHeaders ? 'on' : 'off'))))];
+                (this.props.formatOptions.columnheaders ? 'on' : 'off'))))];
     },
 
     renderFormatSelector: function (format, i) {
@@ -110,7 +110,7 @@ define([
             state.columnIsDisabled[i] = isDisabled;
             that.setState(state);
           },
-          columnHeaders: that.props.formatOptions.columnHeaders,
+          columnHeaders: that.props.formatOptions.columnheaders,
           disabled: state.columnIsDisabled[i],
           path: path,
           key: view
@@ -206,7 +206,7 @@ define([
     },
 
     toggleColumnHeaders: function () {
-      this.props.onChangeFormatOption('columnHeaders', !this.props.formatOptions.columnHeaders);
+      this.props.onChangeFormatOption('columnheaders', !this.props.formatOptions.columnheaders);
     }
   });
 
