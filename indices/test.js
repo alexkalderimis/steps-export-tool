@@ -4,10 +4,41 @@ var chan = Channel.build({
   scope: 'CurrentStep'
 });
 
+var query = {
+  name: 'Genes and Proteins',
+  select: [
+    'symbol', 'primaryIdentifier',
+    'exons.symbol',
+    'proteins.primaryIdentifier', 'proteins.molecularWeight'],
+  from: 'Gene',
+  where: [
+    ['organism.taxonId', '=', 7227],
+    ['chromosome.primaryIdentifier', '=', 'X'],
+    ['Gene', 'IN', 'PL FlyTF_putativeTFs']
+  ]
+};
+
+chan.call({
+  method: 'configure',
+  params: {
+  },
+  success: function () {
+    console.log("Tool configured");
+  },
+  error: function (e) {
+    console.log("configuration failed because: " + e);
+  }
+});
+
 chan.call({
   method: 'init',
   params: {
-    place: 'IFrame'
+    data: {
+      query: query
+    },
+    service: {
+      root: "http://www.flymine.org/query"
+    }
   },
   success: function () {
     console.log("Tool initialised");
@@ -33,7 +64,11 @@ for (i = 0, l = links.length; i < l; i++) {
   });
 }
 
-chan.bind('has', function (trans, message) {
-  alert(message.what + ': ' + message.data);
+chan.bind('has-list', function (trans, data) {
+  console.log("Woot - list exists");
+});
+
+chan.bind('wants', function (trans, params) {
+  console.log('WANT', params.what, params.data);
 });
 
