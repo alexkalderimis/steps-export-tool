@@ -83,7 +83,10 @@ require([
           mine: mine
         });
         React.renderComponent(view, document.body);
-      }).then(trans.complete, trans.error);
+      }).then(trans.complete, function (e) {
+        console.error("Could not init", e.message, e);
+        trans.error(e.message || e);
+      });
 
       trans.delayReturn(true);
     });
