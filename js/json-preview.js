@@ -15,16 +15,20 @@ define(['react', 'mixins', 'underscore'], function (React, mixins, _) {
 
     computeState: function (props) {
       var that = this;
+      var query = props.query;
+      var view = props.view;
+      var fmt = props.format.key;
+      var json = getJSON.bind(null, query, view);
 
-      props.mine.query(props.query)
-                .then(getJSON(props.view, {format: props.format.key, size: 3}))
-                .then(function (res) { that.setState({preview: res}); });
+      json({format: fmt, size: 3}).then(function (res) {
+        that.setState({preview: res});
+      });
 
       props.counting.then(function (size) {
         that.setState({rows: size});
-        props.mine.query(props.query)
-                  .then(getJSON(props.view, {format: props.format.key, size: 3, start: size - 3}))
-                  .then(function (res) { that.setState({endview: res.results}); });
+        json({format: fmt, size: 3, start: size - 3}).then(function (res) {
+          that.setState({endview: res.results});
+        });
       });
 
     },
@@ -50,12 +54,10 @@ define(['react', 'mixins', 'underscore'], function (React, mixins, _) {
 
   return JSONPreview;
 
-  function getJSON (view, opts) {
-    return function (query) {
-      opts.query = query.select(view).toXML();
-      var k = query.service.root + JSON.stringify(opts);
-      return cache[k] || (cache[k] = query.service.post('query/results', opts));
-    };
+  function getJSON (query, view, opts) {
+    opts.query = query.clone().select(view).toXML();
+    var k = query.service.root + JSON.stringify(opts);
+    return cache[k] || (cache[k] = query.service.post('query/results', opts));
   }
 
 });

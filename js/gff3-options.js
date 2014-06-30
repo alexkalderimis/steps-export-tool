@@ -28,7 +28,7 @@ define(function(require, exports, module) {
     },
 
     queryIsNew: function (query) {
-      var thisQuery = JSON.stringify(query);
+      var thisQuery = query.toXML();
       var isDifferent = thisQuery !== this.state.currentQuery;
       this.setState({currentQuery: thisQuery});
       return isDifferent;
@@ -37,19 +37,15 @@ define(function(require, exports, module) {
     computeState: function (props) {
       if (!this.queryIsNew(props.query)) return;
       var that = this;
-      var ticketNo = ++syncro;
+      var query = props.query;
 
-      props.mine
-           .query(props.query)
-           .then(function (query) {
-        if (ticketNo !== syncro) return;
-        var columns = query.getViewNodes().map(Column).filter(isaSeqFeat);
+      var columns = query.getViewNodes().map(Column).filter(isaSeqFeat);
         
+      setTimeout(function () {
         that.setState({exportableNodes: columns});
-        that.props.onChangeFormatOption('export', columns.filter(to('selected'))
-                                                   .map(to('path')));
-
-      }).then(null, console.error.bind(console));
+        var toExport = columns.filter(to('selected')).map(to('path'));
+        that.props.onChangeFormatOption('export', toExport);
+      });
 
       function Column (p, i) {
           return {path: p, index: i, selected: true};

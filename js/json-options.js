@@ -19,16 +19,20 @@ define([
       var props = this.props;
       var state = this.state;
       var that = this;
+      var query = props.query;
 
-      var qp = props.mine.query(props.query);
-      var columns = props.query.select.map(function (p, i) {
-        return {key: p, path: qp.then(function (q) { return q.makePath(p); }), disabled: state.columnIsDisabled[i]};
+      var columns = query.views.map(function (p, i) {
+        return {key: p, path: query.makePath(p), disabled: state.columnIsDisabled[i]};
       });
       var columnControls = d.div(
           {className: 'form-group', key: 'view'},
           d.label({className: this.labelCols + ' control-label'}, 'Columns'),
           d.div({className: this.controlCols},
-            ColumnList({moveColumn: this.moveColumn, onChangeSelected: this.onColumnSelected, columns: columns})));
+            ColumnList({
+              moveColumn: this.moveColumn,
+              onChangeSelected: this.onColumnSelected,
+              columns: columns
+            })));
       var jsonFormats = formats.slice(5);
 
       var formatControls = d.div(
@@ -57,7 +61,7 @@ define([
         format: this.props.format,
         query: this.props.query,
         counting: this.countRows(),
-        view: this.props.query.select.filter(function (_, i) {
+        view: this.props.query.views.filter(function (_, i) {
           return !that.state.columnIsDisabled[i];
         })
       });

@@ -91,11 +91,9 @@ define([
       var props = this.props;
       var state = this.state;
       var that = this;
-      var lastIndex = props.query.select.length - 1;
-      return props.query.select.map(function (view, i) {
-        var pathPromise = props.mine.query(props.query).then(function (q) {
-          return q.makePath(view);
-        });
+      var lastIndex = props.query.views.length - 1;
+      return props.query.views.map(function (view, i) {
+        var path = props.query.makePath(view);
         return TableHeader({
           ref: 'header' + i,
           onDragEnd: that.reorderHeader.bind(that, i),
@@ -103,7 +101,7 @@ define([
           isLast: i === lastIndex,
           changePostion: function (delta) {
             var newIdx = i + delta;
-            if (newIdx >= 0 && newIdx < props.query.select.length) {
+            if (newIdx >= 0 && newIdx <= lastIndex) {
               that.moveColumn(i, newIdx);
             }
           },
@@ -114,7 +112,7 @@ define([
           },
           columnHeaders: that.props.formatOptions.columnHeaders,
           disabled: state.columnIsDisabled[i],
-          pathPromise: pathPromise,
+          path: path,
           key: view
         });
       });
@@ -124,9 +122,10 @@ define([
       var newIndex = colIndex
         , query = this.props.query
         , that  = this
-        , x = pos.left + pos.width / 2;
+        , x = pos.left + pos.width / 2
+        , select = query.views.slice();
       // find the lowest column we are to the left of.
-      query.select.forEach(function (col, i) {
+      select.forEach(function (col, i) {
         if (i > colIndex || newIndex !== colIndex) return;
         var midPoint = getMidpoint(i);
         if (x < midPoint) {
@@ -137,7 +136,7 @@ define([
         return moveTo(newIndex);
       }
       // Find the highest column we are to the right of.
-      query.select.forEach(function (col, i) {
+      select.forEach(function (col, i) {
         if (i < colIndex) return;
         var midPoint = getMidpoint(i);
         if (x > midPoint) {
@@ -163,7 +162,7 @@ define([
 
     getFirstFewRows: function () {
       var s = this.state;
-      var view = this.props.query.select;
+      var view = this.props.query.views.slice();
       return s.firstFewRows.map(function (row, i) {
         var opacity = 1 - (0.25 * i);
         return d.tr(
@@ -187,7 +186,7 @@ define([
     renderExampleRow: function () {
       return d.tr(
           {},
-          this.props.query.select.map(function (_, i) {
+          this.props.query.views.map(function (_, i) {
             return d.td({key: i}, d.span({}, '...'));
           }));
     },
