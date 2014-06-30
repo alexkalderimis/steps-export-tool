@@ -74,16 +74,18 @@ require([
     // Load the exporter with the given query.
     chan.bind('init', function (trans, params) {
 
-      var view  = View({
-        driveClientId: config.driveClientId,
-        dropboxKey: config.dropboxClientKey,
-        query: params.query,
-        mine: imjs.Service.connect(params.service)
-      });
+      var mine = imjs.Service.connect(params.service);
+      mine.query(params.query).then(function (q) {
+        var view  = View({
+          driveClientId: config.driveClientId,
+          dropboxKey: config.dropboxClientKey,
+          query: q,
+          mine: mine
+        });
+        React.renderComponent(view, document.body);
+      }).then(trans.complete, trans.error);
 
-      React.renderComponent(view, document.body);
-
-      return 'ok';
+      trans.delayReturn(true);
     });
 
     // Apply parental styles.
