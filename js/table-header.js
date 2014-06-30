@@ -92,9 +92,7 @@ define(['react', 'draggable'], function (React, Draggable) {
 
     computeState: function (props) {
       var that = this;
-      props.pathPromise
-           .then(function (path) { return path.getDisplayName(); })
-           .then(function (name) {
+      props.path.getDisplayName().then(function (name) {
         that.setState({pathName: name});
       });
     },

@@ -28,7 +28,7 @@ define(function(require, exports, module) {
     },
 
     queryIsNew: function (query) {
-      var thisQuery = JSON.stringify(query);
+      var thisQuery = query.toXML();
       var isDifferent = thisQuery !== this.state.currentQuery;
       this.setState({currentQuery: thisQuery});
       return isDifferent;
@@ -36,22 +36,15 @@ define(function(require, exports, module) {
 
     computeState: function (props) {
       if (!this.queryIsNew(props.query)) return;
-      var that = this;
-      var ticketNo = ++syncro;
 
-      props.mine
-           .query(props.query)
-           .then(function (query) {
-        if (ticketNo !== syncro) return;
-        var columns = query.getViewNodes().map(function (p, i) {
+      var columns = props.query.getViewNodes().map(function (p, i) {
           return {path: p, index: i, selected: i === 0};
-        });
-        that.setState({
-          exportableNodes: columns.filter(function (c) { // Diff here.
-            return c.path.isa('SequenceFeature') || c.path.isa('Protein');
-          })
-        });
-      }).then(null, console.error.bind(console));
+      });
+      this.setState({
+        exportableNodes: columns.filter(function (c) { // Diff here.
+          return c.path.isa('SequenceFeature') || c.path.isa('Protein');
+        })
+      });
     },
 
     renderExportableNode: function (node) {

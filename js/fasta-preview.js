@@ -24,10 +24,7 @@ define(function (require, exports, module) {
         , setRecords = function (rs) { that.setState({sample: rs}); }
         , paths = props.nodes.map(addid);
 
-      props.mine
-           .query(props.query)
-           .then(getFasta.bind(null, paths))
-           .then(setRecords, console.error.bind(console));
+        getFasta(props.query, paths).then(setRecords, console.error.bind(console));
     },
 
     render: function () {
@@ -46,7 +43,7 @@ define(function (require, exports, module) {
 
   // This logic is to work around the fact that paging doesn't work in
   // fasta queries (yet!).
-  function getFasta (paths, query) {
+  function getFasta (query, paths) {
     var k = query.service.root + query.toXML() + paths.join(';');
     if (!paths || !paths.length) return Q.when([]);
     var clone = query.clone();

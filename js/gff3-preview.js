@@ -37,10 +37,7 @@ define(function (require, exports, module) {
         , setRows = function (rows) { that.setState({rows: rows}); }
         , paths = props.nodes.map(addid);
 
-      props.mine
-           .query(props.query)
-           .then(getGff3.bind(null, paths))
-           .then(setRows, console.error.bind(console));
+      getGff3(props.query, paths).then(setRows, console.error.bind(console));
     },
 
     render: function () {
@@ -74,7 +71,7 @@ define(function (require, exports, module) {
 
   var gff3Cache = {};
 
-  function getGff3 (paths, query) {
+  function getGff3 (query, paths) {
     var c = gff3Cache
       , xml = query.toXML()
       , k = query.service.root + xml + paths.join(';');

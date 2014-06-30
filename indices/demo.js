@@ -70,13 +70,16 @@ require([
     console.log('CONFIG', config);
 
     var mine  = imjs.Service.connect({root: "http://www.flymine.org/query/service"});
-    var view  = View({
-      driveClientId: config.driveClientId,
-      dropboxKey: config.dropboxClientKey,
-      query: query,
-      mine: mine
+    mine.query(query).then(function (q) {
+      var view  = View({
+        driveClientId: config.driveClientId,
+        dropboxKey: config.dropboxClientKey,
+        query: q,
+        mine: mine
+      });
+      React.renderComponent(view, document.body);
+    }).then(null, function (e) {
+      console.error(e.message, e);
     });
-
-    React.renderComponent(view, document.body);
 
 });

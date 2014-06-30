@@ -6,23 +6,10 @@ define(['react', 'mixins'], function (React, mixins) {
   var DownloadButton = React.createClass({
     displayName: 'DownloadButton',
 
-    getInitialState: function () {
-      return {};
-    },
-
-    mixins: [mixins.ComputableState],
-
-    computeState: function (props) {
-      var that = this;
-      props.uriPromise.then(function (uri) {
-        that.setState({exportURI: uri});
-      });
-    },
-
     render: function () {
       return d.a(
         {
-          href: this.state.exportURI,
+          href: this.props.uri,
           className: 'btn btn-lg btn-primary'
         },
         d.i({className: 'fa fa-cloud-download'}),

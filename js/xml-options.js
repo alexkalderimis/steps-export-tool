@@ -18,10 +18,13 @@ define([
       var props = this.props;
       var state = this.state;
       var that = this;
-
-      var qp = props.mine.query(props.query);
-      var columns = props.query.select.map(function (p, i) {
-        return {key: p, path: qp.then(function (q) { return q.makePath(p); }), disabled: state.columnIsDisabled[i]};
+      var query = props.query;
+      var columns = query.views.map(function (p, i) {
+        return {
+          key: p,
+          path: query.makePath(p),
+          disabled: state.columnIsDisabled[i]
+        };
       });
       return d.div(
           {className: 'form-group', key: 'view'},
@@ -40,7 +43,7 @@ define([
         mine: this.props.mine,
         query: this.props.query,
         counting: this.countRows(),
-        view: this.props.query.select.filter(function (_, i) {
+        view: this.props.query.views.filter(function (_, i) {
           return !that.state.columnIsDisabled[i];
         })
       });

@@ -32,7 +32,7 @@ define(function (require, exports, module) {
     },
 
     queryIsNew: function (query) {
-      var thisQuery = JSON.stringify(query);
+      var thisQuery = query.toXML();
       var isDifferent = thisQuery !== this.state.currentQuery;
       this.setState({currentQuery: thisQuery});
       return isDifferent;
@@ -63,11 +63,11 @@ define(function (require, exports, module) {
     },
 
     getEffectiveQuery: function () {
-      var was = this.props.query.select;
+      var was = this.props.query.views.slice();
       var is = was.filter(onlySelectedColumns(this.state.columnIsDisabled));
       // TODO: must use actual queries. this is pointless with just objects.
 
-      return _.extend({}, this.props.query, {select: is});
+      return this.props.query.clone().select(is);
     },
 
     onColumnSelected: function (index, value) {
@@ -78,7 +78,7 @@ define(function (require, exports, module) {
 
     moveColumn: function (oldIdx, newIdx) {
       var query = this.props.query;
-      var view = query.select.slice();
+      var view = query.views.slice();
       var movendum = view[oldIdx];
       view.splice(oldIdx, 1);
       view.splice(newIdx, 0, movendum);
@@ -94,7 +94,7 @@ define(function (require, exports, module) {
 
       var preview = this.renderPreview();
 
-      var colCount = this.props.query.select.filter(onlySelectedColumns(s.columnIsDisabled)).length;
+      var colCount = this.props.query.views.filter(onlySelectedColumns(s.columnIsDisabled)).length;
 
       var customControls = [];
       if (this.customControls) {
@@ -118,7 +118,7 @@ define(function (require, exports, module) {
 
   var countCache = {};
   function count (mine, query) {
-    var k = mine.root + JSON.stringify(query);
+    var k = mine.root + query.toXML();
     return countCache[k] || (countCache[k] = mine.count(query));
   }
 

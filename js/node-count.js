@@ -16,11 +16,12 @@ define(function (require, exports, module) {
 
     computeState: function (props) {
       var that = this;
+      var query = props.query;
       console.log(props.nodes.map(String));
-      props.mine.query(props.query).then(function (query) {
-        return Q.all(props.nodes.map(getCount.bind(null, query)))
-         .then(function (counts) { that.setState({count: sum(counts)}); });
-      }).then(null, console.error.bind(console));
+
+      Q.all(props.nodes.map(getCount.bind(null, query)))
+       .then(function (counts) { that.setState({count: sum(counts)}); })
+       .then(null, console.error.bind(console));
     },
 
     getInitialState: function () {

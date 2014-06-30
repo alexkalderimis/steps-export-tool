@@ -33,7 +33,7 @@ define(function (require, exports, module) {
         activeTab: 0,
         exportURI: '',
         format: formats[0],
-        columns: this.props.query.select.slice(),
+        columns: this.props.query.views.slice(),
         action: 'Download'
       };
     },
@@ -58,7 +58,7 @@ define(function (require, exports, module) {
           }, this.renderCloudOptions()),
           d.div({}, // Wrap to prevent matching .tab-content > .active
             DownloadButton({
-              uriPromise: this.getExportURI(),
+              uri: this.getExportURI(),
               fileName: this.getFileName()
             }),
          ' ',
@@ -78,8 +78,9 @@ define(function (require, exports, module) {
     },
 
     getQuery: function () {
-      var query = _.extend({}, this.props.query, {select: this.state.columns});
-      return query;
+      var clone = this.props.query.clone();
+      clone.select(this.state.columns);
+      return clone;
     },
 
     renderTabHeader: function (tab, i) {
@@ -220,27 +221,22 @@ define(function (require, exports, module) {
     getExportURI: function () {
       var format = this.state.format.key;
       var extraOptions = (this.state[format] || {});
-      console.log(format, extraOptions.export);
-      return this.props.mine.query(this.props.query).then(function (q) {
-        return q.getExportURI(format, extraOptions);
-      });
+
+      return this.props.query.getExportURI(format, extraOptions);
     },
 
     sendToDropbox: function () {
       var that = this;
       var fileName = this.getFileName();
       Dropbox.appKey = this.props.dropboxKey;
-      this.getExportURI().then(function (uri) {
-        Dropbox.save({
-          files: [ {url: uri, filename: fileName} ],
-          success: that.onUploadComplete,
-          progress: that.onUploadProgress,
-          cancel: that.onUploadError,
-          error: that.onUploadError
-        });
-      }).then(
-        this.onUploadProgress.bind(this, 0),
-        console.error.bind(console));
+      Dropbox.save({
+        files: [ {url: this.getExportURI(), filename: fileName} ],
+        success: that.onUploadComplete,
+        progress: that.onUploadProgress,
+        cancel: that.onUploadError,
+        error: that.onUploadError
+      });
+      this.onUploadProgress.bind(0);
     },
 
     sendToGalaxy: function () {
@@ -254,12 +250,10 @@ define(function (require, exports, module) {
         tool_id: tool,
         URL_method: 'post',
         data_type: dataType,
+        URL: this.getExportURI(),
         info: 'uploaded from intermine'
       };
-      this.getExportURI().then(function (target) {
-        params.URL = target;
-        openWindowWithPost(location, 'ExportToGalaxy', params);
-      });
+      openWindowWithPost(location, 'ExportToGalaxy', params);
     },
 
     sendToGenomespace: function () {
@@ -269,12 +263,12 @@ define(function (require, exports, module) {
       if (!genomeSpaceUrl) throw new Error("No genomespace URL configured.");
       if (typeof window === 'undefined') throw new Error("window object not available.");
       var encFileName = encodeURIComponent(this.getFileName());
-      this.getExportURI().then(encodeURIComponent).then(function (target) {
-        var qs = 'uploadUrl=' + target + '&fileName=' + encFileName;
-        var win = window.open(genomeSpaceUrl + '?' + qs);
-        win.setCallbackOnGSUploadComplete = onSuccess;
-        win.setCallbackOnGSUploadError = onError;
-      });
+      var target = encodeURIComponent(this.getExportURI());
+      var qs = 'uploadUrl=' + target + '&fileName=' + encFileName;
+      var win = window.open(genomeSpaceUrl + '?' + qs);
+      win.setCallbackOnGSUploadComplete = onSuccess;
+      win.setCallbackOnGSUploadError = onError;
+
       function onSuccess (savePath) {
         console.log("Saved successfully to " + savePath);
         cloud.uploadedFileUri = savePath;
@@ -299,13 +293,8 @@ define(function (require, exports, module) {
           var delimiter = "\r\n--" + boundary + "\r\n";
           var close_delim = "\r\n--" + boundary + "--";
           gapi.client.load('drive', 'v2', function () {
-            that.props.mine
-                .query(that.props.query)
-                .then(function (q) {
-                  return q.getExportURI(that.state.format.key);
-                })
-                .then($.get)
-                .then(function (data) {
+            var uri = that.props.query.getExportURI(that.state.format.key);
+            $.get(uri).then(function (data) {
               var metadata = {
                 title: that.getFileName(),
                 mimetype: 'text/plain'

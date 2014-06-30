@@ -15,16 +15,18 @@ define(['react', 'mixins'], function (React, mixins) {
 
     computeState: function (props) {
       var that = this;
+      var query = props.query;
+      var view = props.view;
 
-      props.mine.query(props.query)
-                .then(getXML(props.view, {size: 3}))
-                .then(function (res) { that.setState({preview: res}); });
+      getXML(query, view, {size: 3}).then(function (res) {
+        that.setState({preview: res});
+      });
 
       props.counting.then(function (size) {
         that.setState({rows: size});
-        props.mine.query(props.query)
-                  .then(getXML(props.view, {size: 3, start: size - 3}))
-                  .then(function (res) { that.setState({endview: res}); });
+        getXML(query, view, {size: 3, start: size - 3}).then(function (res) {
+          that.setState({endview: res});
+        });
       });
 
     },
@@ -47,13 +49,11 @@ define(['react', 'mixins'], function (React, mixins) {
 
   return XMLPreview;
 
-  function getXML (view, opts) {
-    return function (query) {
-      opts.query = query.select(view).toXML();
-      opts.format = 'xml';
-      var k = query.service.root + JSON.stringify(opts);
-      return cache[k] || (cache[k] = query.service.post('query/results', opts));
-    };
+  function getXML (query, view, opts) {
+    opts.query = query.clone().select(view).toXML();
+    opts.format = 'xml';
+    var k = query.service.root + JSON.stringify(opts);
+    return cache[k] || (cache[k] = query.service.post('query/results', opts));
   }
 
 });
