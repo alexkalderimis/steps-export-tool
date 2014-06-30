@@ -9,6 +9,7 @@
 	font-style: normal;
 }
 
+i.icon, .fa.icon,
 [class^="icon-"], [class*=" icon-"] {
 	font-family: 'icomoon';
 	speak: none;
