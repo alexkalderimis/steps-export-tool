@@ -77,7 +77,7 @@ require([
       var view  = View({
         driveClientId: config.driveClientId,
         dropboxKey: config.dropboxClientKey,
-        query: params.data.query,
+        query: params.query,
         mine: imjs.Service.connect(params.service)
       });
 

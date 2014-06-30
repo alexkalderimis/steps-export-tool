@@ -33,9 +33,7 @@ chan.call({
 chan.call({
   method: 'init',
   params: {
-    data: {
-      query: query
-    },
+    query: query,
     service: {
       root: "http://www.flymine.org/query"
     }
